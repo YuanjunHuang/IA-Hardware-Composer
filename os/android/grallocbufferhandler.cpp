@@ -25,12 +25,8 @@
 #include <cutils/native_handle.h>
 #include "commondrmutils.h"
 
-#ifdef USE_MINIGBM
 #include <cros_gralloc_handle.h>
 #include <cros_gralloc_helpers.h>
-#else
-#include <gralloc_drm_handle.h>
-#endif
 
 #include <hwcdefs.h>
 #include <hwctrace.h>
@@ -84,7 +80,6 @@ void GrallocBufferHandler::DestroyHandle(HWCNativeHandle handle) {
   DestroyBufferHandle(handle);
 }
 
-#ifdef USE_MINIGBM
 bool GrallocBufferHandler::ImportBuffer(HWCNativeHandle handle) {
   return ImportGraphicsBuffer(handle, fd_);
 }
@@ -98,48 +93,6 @@ uint32_t GrallocBufferHandler::GetTotalPlanes(HWCNativeHandle handle) {
 
   return drm_bo_get_num_planes(gr_handle->format);
 }
-#else
-bool GrallocBufferHandler::ImportBuffer(HWCNativeHandle handle) {
-  hwc_drm_bo_t hwc_bo;
-  int ret = gralloc_->perform(gralloc_, GRALLOC_MODULE_PERFORM_DRM_IMPORT, fd_,
-                              handle->handle_, &hwc_bo);
-  if (ret) {
-    ETRACE("GRALLOC_MODULE_PERFORM_DRM_IMPORT failed %d", ret);
-    return false;
-  }
-
-  memset(bo, 0, sizeof(struct HwcBuffer));
-  gralloc_->registerBuffer(gralloc_, handle->handle_);
-  gralloc_drm_handle_t *gr_handle = gralloc_drm_handle(handle->handle_);
-  bo->width = hwc_bo.width;
-  bo->height = hwc_bo.height;
-  bo->format = hwc_bo.format;
-  for (uint32_t i = 0; i < 4; i++) {
-    bo->pitches[i] = hwc_bo.pitches[i];
-    bo->offsets[i] = hwc_bo.offsets[i];
-    bo->gem_handles[i] = hwc_bo.gem_handles[i];
-  }
-  if (!gr_handle) {
-    ETRACE("could not find gralloc drm handle");
-    return false;
-  }
-
-  if (gr_handle->usage & GRALLOC_USAGE_PROTECTED) {
-    bo->usage |= hwcomposer::kLayerProtected;
-  } else if (gr_handle->usage & GRALLOC_USAGE_CURSOR) {
-    bo->usage |= hwcomposer::kLayerCursor;
-  }
-
-  bo->prime_fd = gr_handle->prime_fd;
-
-  return true;
-}
-
-// stubs
-uint32_t GrallocBufferHandler::GetTotalPlanes(HWCNativeHandle /*handle*/) {
-  return 0;
-}
-#endif
 
 void GrallocBufferHandler::CopyHandle(HWCNativeHandle source,
                                       HWCNativeHandle *target) {
