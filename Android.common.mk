@@ -72,8 +72,6 @@ endif
 ifeq ($(strip $(BOARD_USES_GRALLOC1)), true)
 LOCAL_SRC_FILES += os/android/gralloc1bufferhandler.cpp
 LOCAL_CPPFLAGS += -DUSE_GRALLOC1
-else
-LOCAL_SRC_FILES += os/android/grallocbufferhandler.cpp
 endif
 
 LOCAL_CPPFLAGS += \
