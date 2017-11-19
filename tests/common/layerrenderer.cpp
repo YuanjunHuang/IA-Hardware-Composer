@@ -37,8 +37,6 @@ bool LayerRenderer::Init(uint32_t width, uint32_t height, uint32_t format,
     return false;
   }
 
-  buffer_handler_->CopyHandle(handle_, &handle_);
-
   if (!buffer_handler_->ImportBuffer(handle_, &bo_)) {
     ETRACE("LayerRenderer: ImportBuffer failed");
     return false;

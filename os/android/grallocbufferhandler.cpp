@@ -86,16 +86,11 @@ void GrallocBufferHandler::DestroyHandle(HWCNativeHandle handle) {
 
 #ifdef USE_MINIGBM
 bool GrallocBufferHandler::ImportBuffer(HWCNativeHandle handle, HwcBuffer *bo) {
-  if (!handle->imported_handle_) {
-    ETRACE("could not find gralloc drm handle");
-    return false;
-  }
-
   return ImportGraphicsBuffer(handle, bo, fd_);
 }
 
 uint32_t GrallocBufferHandler::GetTotalPlanes(HWCNativeHandle handle) {
-  auto gr_handle = (struct cros_gralloc_handle *)handle->imported_handle_;
+  auto gr_handle = (struct cros_gralloc_handle *)handle->handle_;
   if (!gr_handle) {
     ETRACE("could not find gralloc drm handle");
     return false;

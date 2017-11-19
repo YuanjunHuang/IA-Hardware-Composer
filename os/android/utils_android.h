@@ -174,46 +174,15 @@ static uint32_t DrmFormatToHALFormat(int format) {
   return DRM_FORMAT_NONE;
 }
 
-static native_handle_t *dup_buffer_handle(buffer_handle_t handle) {
-  native_handle_t *new_handle =
-      native_handle_create(handle->numFds, handle->numInts);
-  if (new_handle == NULL)
-    return NULL;
-
-  const int *old_data = handle->data;
-  int *new_data = new_handle->data;
-  for (int i = 0; i < handle->numFds; i++) {
-    *new_data = dup(*old_data);
-    old_data++;
-    new_data++;
-  }
-  memcpy(new_data, old_data, sizeof(int) * handle->numInts);
-
-  return new_handle;
-}
-
-static void free_buffer_handle(native_handle_t *handle) {
-  int ret = native_handle_close(handle);
-  if (ret)
-    ETRACE("Failed to close native handle %d", ret);
-  ret = native_handle_delete(handle);
-  if (ret)
-    ETRACE("Failed to delete native handle %d", ret);
-}
-
 static void CopyBufferHandle(HWCNativeHandle source, HWCNativeHandle *target) {
   struct gralloc_handle *temp = new struct gralloc_handle();
   temp->handle_ = source->handle_;
   temp->buffer_ = source->buffer_;
-  temp->imported_handle_ = dup_buffer_handle(source->handle_);
   temp->hwc_buffer_ = source->hwc_buffer_;
   *target = temp;
 }
 
 static void DestroyBufferHandle(HWCNativeHandle handle) {
-  if (handle->imported_handle_)
-    free_buffer_handle(handle->imported_handle_);
-
   delete handle;
   handle = NULL;
 }
@@ -280,7 +249,7 @@ static bool ReleaseGraphicsBuffer(HWCNativeHandle handle, int fd) {
 
 static bool ImportGraphicsBuffer(HWCNativeHandle handle, HwcBuffer *bo,
                                  int fd) {
-  auto gr_handle = (struct cros_gralloc_handle *)handle->imported_handle_;
+  auto gr_handle = (struct cros_gralloc_handle *)handle->handle_;
   memset(bo, 0, sizeof(struct HwcBuffer));
   bo->format = gr_handle->format;
   bo->width = gr_handle->width;

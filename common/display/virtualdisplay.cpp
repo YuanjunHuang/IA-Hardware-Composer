@@ -46,10 +46,6 @@ VirtualDisplay::~VirtualDisplay() {
     close(acquire_fence_);
   }
 
-  if (handle_) {
-    buffer_handler_->DestroyHandle(handle_);
-  }
-
   delete output_handle_;
 }
 
@@ -160,17 +156,8 @@ bool VirtualDisplay::Present(std::vector<HwcLayer *> &source_layers,
 void VirtualDisplay::SetOutputBuffer(HWCNativeHandle buffer,
                                      int32_t acquire_fence) {
   if (!output_handle_ || output_handle_ != buffer) {
-    if (handle_) {
-      buffer_handler_->DestroyHandle(handle_);
-    }
-
     delete output_handle_;
     output_handle_ = buffer;
-    handle_ = 0;
-
-    if (output_handle_) {
-      buffer_handler_->CopyHandle(output_handle_, &handle_);
-    }
   }
 
   if (acquire_fence_ > 0) {

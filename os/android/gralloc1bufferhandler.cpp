@@ -96,7 +96,7 @@ bool Gralloc1BufferHandler::ReleaseBuffer(HWCNativeHandle handle) {
 
   gralloc1_device_t *gralloc1_dvc =
       reinterpret_cast<gralloc1_device_t *>(device_);
-  release_(gralloc1_dvc, handle->imported_handle_);
+  release_(gralloc1_dvc, handle->handle_);
 
   return true;
 }
@@ -107,19 +107,14 @@ void Gralloc1BufferHandler::DestroyHandle(HWCNativeHandle handle) {
 
 bool Gralloc1BufferHandler::ImportBuffer(HWCNativeHandle handle,
                                          HwcBuffer *bo) {
-  if (!handle->imported_handle_) {
-    ETRACE("could not find gralloc drm handle");
-    return false;
-  }
-
   gralloc1_device_t *gralloc1_dvc =
       reinterpret_cast<gralloc1_device_t *>(device_);
-  register_(gralloc1_dvc, handle->imported_handle_);
+  register_(gralloc1_dvc, handle->handle_);
   return ImportGraphicsBuffer(handle, bo, fd_);
 }
 
 uint32_t Gralloc1BufferHandler::GetTotalPlanes(HWCNativeHandle handle) {
-  auto gr_handle = (struct cros_gralloc_handle *)handle->imported_handle_;
+  auto gr_handle = (struct cros_gralloc_handle *)handle->handle_;
   if (!gr_handle) {
     ETRACE("could not find gralloc drm handle");
     return false;
@@ -137,7 +132,7 @@ void *Gralloc1BufferHandler::Map(HWCNativeHandle handle, uint32_t x,
                                  uint32_t y, uint32_t width,
                                  uint32_t height, uint32_t * /*stride*/,
                                  void ** map_data, size_t /*plane*/) {
-  auto gr_handle = (struct cros_gralloc_handle *)handle->imported_handle_;
+  auto gr_handle = (struct cros_gralloc_handle *)handle->handle_;
   if (!gr_handle) {
     ETRACE("could not find gralloc drm handle");
     return NULL;
@@ -152,14 +147,15 @@ void *Gralloc1BufferHandler::Map(HWCNativeHandle handle, uint32_t x,
 
   gralloc1_device_t *gralloc1_dvc =
       reinterpret_cast<gralloc1_device_t *>(device_);
-  uint32_t status = lock_(gralloc1_dvc, handle->imported_handle_, GRALLOC_USAGE_SW_READ_RARELY,
-          GRALLOC_USAGE_SW_READ_RARELY, &rect, map_data, acquireFence);
+  uint32_t status =
+      lock_(gralloc1_dvc, handle->handle_, GRALLOC_USAGE_SW_READ_RARELY,
+            GRALLOC_USAGE_SW_READ_RARELY, &rect, map_data, acquireFence);
   return (GRALLOC1_ERROR_NONE == status) ? *map_data : NULL;
 }
 
 int32_t Gralloc1BufferHandler::UnMap(HWCNativeHandle handle,
-                                  void * /*map_data*/) {
-  auto gr_handle = (struct cros_gralloc_handle *)handle->imported_handle_;
+                                     void * /*map_data*/) {
+  auto gr_handle = (struct cros_gralloc_handle *)handle->handle_;
   if (!gr_handle) {
     ETRACE("could not find gralloc drm handle");
     return GRALLOC1_ERROR_BAD_HANDLE;
@@ -168,7 +164,7 @@ int32_t Gralloc1BufferHandler::UnMap(HWCNativeHandle handle,
   int releaseFence = 0;
   gralloc1_device_t *gralloc1_dvc =
       reinterpret_cast<gralloc1_device_t *>(device_);
-  return unlock_(gralloc1_dvc, handle->imported_handle_, &releaseFence);
+  return unlock_(gralloc1_dvc, handle->handle_, &releaseFence);
 }
 
 }  // namespace hwcomposer

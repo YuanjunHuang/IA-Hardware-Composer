@@ -86,7 +86,6 @@ class VirtualDisplay : public NativeDisplay {
   uint32_t width_ = 1;
   uint32_t height_ = 1;
   std::vector<OverlayLayer> in_flight_layers_;
-  HWCNativeHandle handle_ = 0;
 };
 
 }  // namespace hwcomposer

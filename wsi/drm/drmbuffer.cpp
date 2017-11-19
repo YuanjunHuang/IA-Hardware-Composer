@@ -30,11 +30,6 @@ namespace hwcomposer {
 
 DrmBuffer::~DrmBuffer() {
   ReleaseFrameBuffer();
-
-  if (buffer_handler_ && handle_) {
-    buffer_handler_->ReleaseBuffer(handle_);
-    buffer_handler_->DestroyHandle(handle_);
-  }
 }
 
 void DrmBuffer::Initialize(const HwcBuffer& bo) {
@@ -93,8 +88,7 @@ void DrmBuffer::Initialize(const HwcBuffer& bo) {
 void DrmBuffer::InitializeFromNativeHandle(
     HWCNativeHandle handle, NativeBufferHandler* buffer_handler) {
   struct HwcBuffer bo;
-  buffer_handler->CopyHandle(handle, &handle_);
-  if (!buffer_handler->ImportBuffer(handle_, &bo)) {
+  if (!buffer_handler->ImportBuffer(handle, &bo)) {
     ETRACE("Failed to Import buffer.");
     return;
   }
