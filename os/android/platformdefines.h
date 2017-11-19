@@ -43,8 +43,8 @@ extern "C" {
 
 struct gralloc_handle {
   buffer_handle_t handle_ = NULL;
-  android::sp<android::GraphicBuffer> buffer_ = NULL;
-  uint32_t gem_handle_ = 0;
+  HwcBuffer meta_data_;
+  uint64_t gralloc1_buffer_descriptor_t_ = 0;
   bool hwc_buffer_ = false;
 };
 

@@ -85,8 +85,8 @@ void GrallocBufferHandler::DestroyHandle(HWCNativeHandle handle) {
 }
 
 #ifdef USE_MINIGBM
-bool GrallocBufferHandler::ImportBuffer(HWCNativeHandle handle, HwcBuffer *bo) {
-  return ImportGraphicsBuffer(handle, bo, fd_);
+bool GrallocBufferHandler::ImportBuffer(HWCNativeHandle handle) {
+  return ImportGraphicsBuffer(handle, fd_);
 }
 
 uint32_t GrallocBufferHandler::GetTotalPlanes(HWCNativeHandle handle) {
@@ -99,7 +99,7 @@ uint32_t GrallocBufferHandler::GetTotalPlanes(HWCNativeHandle handle) {
   return drm_bo_get_num_planes(gr_handle->format);
 }
 #else
-bool GrallocBufferHandler::ImportBuffer(HWCNativeHandle handle, HwcBuffer *bo) {
+bool GrallocBufferHandler::ImportBuffer(HWCNativeHandle handle) {
   hwc_drm_bo_t hwc_bo;
   int ret = gralloc_->perform(gralloc_, GRALLOC_MODULE_PERFORM_DRM_IMPORT, fd_,
                               handle->handle_, &hwc_bo);

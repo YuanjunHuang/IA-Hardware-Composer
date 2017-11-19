@@ -22,6 +22,7 @@
 
 VkFormat NativeToVkFormat(int native_format);
 #endif
+#include <hwcbuffer.h>
 
 #define DRM_FORMAT_NONE fourcc_code('0', '0', '0', '0')
 

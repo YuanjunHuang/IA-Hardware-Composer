@@ -40,7 +40,7 @@ class NativeBufferHandler {
 
   virtual void DestroyHandle(HWCNativeHandle handle) = 0;
 
-  virtual bool ImportBuffer(HWCNativeHandle handle, HwcBuffer *bo) = 0;
+  virtual bool ImportBuffer(HWCNativeHandle handle) = 0;
 
   virtual void CopyHandle(HWCNativeHandle source, HWCNativeHandle *target) = 0;
 

@@ -33,22 +33,22 @@ DrmBuffer::~DrmBuffer() {
 }
 
 void DrmBuffer::Initialize(const HwcBuffer& bo) {
-  width_ = bo.width;
-  height_ = bo.height;
+  width_ = bo.width_;
+  height_ = bo.height_;
   for (uint32_t i = 0; i < 4; i++) {
-    pitches_[i] = bo.pitches[i];
-    offsets_[i] = bo.offsets[i];
-    gem_handles_[i] = bo.gem_handles[i];
+    pitches_[i] = bo.pitches_[i];
+    offsets_[i] = bo.offsets_[i];
+    gem_handles_[i] = bo.gem_handles_[i];
   }
 
-  format_ = bo.format;
+  format_ = bo.format_;
   if (format_ == DRM_FORMAT_NV12_Y_TILED_INTEL || format_ == DRM_FORMAT_NV21)
     format_ = DRM_FORMAT_NV12;
   else if (format_ == DRM_FORMAT_YVU420_ANDROID)
     format_ = DRM_FORMAT_YUV420;
 
-  prime_fd_ = bo.prime_fd;
-  usage_ = bo.usage;
+  prime_fd_ = bo.prime_fd_;
+  usage_ = bo.usage_;
 
   if (usage_ & hwcomposer::kLayerCursor) {
     // We support DRM_FORMAT_ARGB8888 for cursor.
@@ -87,14 +87,13 @@ void DrmBuffer::Initialize(const HwcBuffer& bo) {
 
 void DrmBuffer::InitializeFromNativeHandle(
     HWCNativeHandle handle, NativeBufferHandler* buffer_handler) {
-  struct HwcBuffer bo;
-  if (!buffer_handler->ImportBuffer(handle, &bo)) {
+  if (!buffer_handler->ImportBuffer(handle)) {
     ETRACE("Failed to Import buffer.");
     return;
   }
 
   buffer_handler_ = buffer_handler;
-  Initialize(bo);
+  Initialize(handle->meta_data_);
 }
 
 GpuImage DrmBuffer::ImportImage(GpuDisplay egl_display) {
