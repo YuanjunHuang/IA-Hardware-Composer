@@ -169,6 +169,10 @@ bool Gralloc1BufferHandler::ReleaseBuffer(HWCNativeHandle handle) {
 
 void Gralloc1BufferHandler::DestroyHandle(HWCNativeHandle handle) {
   DestroyBufferHandle(handle);
+
+  gralloc1_device_t *gralloc1_dvc =
+      reinterpret_cast<gralloc1_device_t *>(device_);
+  destroy_descriptor_(gralloc1_dvc, handle->gralloc1_buffer_descriptor_t_);
 }
 
 bool Gralloc1BufferHandler::ImportBuffer(HWCNativeHandle handle) {
