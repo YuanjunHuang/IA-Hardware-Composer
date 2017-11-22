@@ -89,23 +89,8 @@ void OverlayLayer::SetDisplayFrame(const HwcRect<int>& display_frame) {
   display_frame_width_ = display_frame.right - display_frame.left;
   display_frame_height_ = display_frame.bottom - display_frame.top;
   display_frame_ = display_frame;
-  int width = display_frame_width_ + display_frame_.left;
-  int t_width = surface_damage_.left + display_frame_width_;
-  int top = display_frame_height_ + display_frame_.top;
-  int t_top = surface_damage_.top + display_frame_height_;
-  // If surface Damage is not part of display frame, reset it to empty.
-    if ((surface_damage_.left >= (width)) || (t_width <= display_frame_.left) ||
-	(surface_damage_.top >= top) || (t_top <= display_frame_.top)) {
-      surface_damage_ = HwcRect<int>(0, 0, 0, 0);
-      return;
-    }
-
-
-  surface_damage_.left = std::max(surface_damage_.left, display_frame_.left);
-  surface_damage_.right = std::min(surface_damage_.right, display_frame_.right);
-  surface_damage_.top = std::min(surface_damage_.top, display_frame_.top);
-  surface_damage_.bottom =
-      std::min(surface_damage_.bottom, display_frame_.bottom);
+  surface_damage_ = display_frame_;
+  last_surface_damage_ = surface_damage_;
 }
 
 void OverlayLayer::ValidateTransform(uint32_t transform,
@@ -186,6 +171,31 @@ void OverlayLayer::ValidateTransform(uint32_t transform,
   }
 }
 
+void OverlayLayer::UpdateSurfaceDamage(HwcLayer* layer,
+                                       OverlayLayer* previous_layer) {
+  if (!gpu_rendered_) {
+    surface_damage_ = display_frame_;
+    last_surface_damage_ = surface_damage_;
+    return;
+  }
+
+  if (!previous_layer || (state_ & kClearSurface) ||
+      (state_ & kDimensionsChanged) || (transform_ != kIdentity)) {
+    surface_damage_ = display_frame_;
+    last_surface_damage_ = surface_damage_;
+    return;
+  }
+
+  const HwcRect<int>& previous = previous_layer->last_surface_damage_;
+  const HwcRect<int>& current = layer->GetSurfaceDamage();
+  surface_damage_.left = std::min(current.left, previous.left);
+  surface_damage_.right = std::max(current.right, previous.right);
+  surface_damage_.top = std::min(current.top, previous.top);
+  surface_damage_.bottom = std::max(current.bottom, previous.bottom);
+
+  last_surface_damage_ = current;
+}
+
 void OverlayLayer::InitializeState(HwcLayer* layer,
                                    NativeBufferHandler* buffer_handler,
                                    OverlayLayer* previous_layer,
@@ -215,17 +225,15 @@ void OverlayLayer::InitializeState(HwcLayer* layer,
     ValidatePreviousFrameState(previous_layer, layer);
   }
 
-  // TODO: FIXME: We should be able to use surfacedamage
-  // from HWCLayer here.
-  surface_damage_ = display_frame_;
-
   if (layer->HasContentAttributesChanged() ||
       layer->HasVisibleRegionChanged() || layer->HasLayerAttributesChanged()) {
     state_ |= kClearSurface;
   }
 
-  if (!handle_constraints)
+  if (!handle_constraints) {
+    UpdateSurfaceDamage(layer, previous_layer);
     return;
+  }
 
   int32_t left_constraint = layer->GetLeftConstraint();
   int32_t right_constraint = layer->GetRightConstraint();
@@ -256,7 +264,16 @@ void OverlayLayer::InitializeState(HwcLayer* layer,
         std::min(max_height, static_cast<uint32_t>(display_frame_.bottom));
     display_frame_width_ = display_frame_.right - display_frame_.left;
     display_frame_height_ = display_frame_.bottom - display_frame_.top;
-    surface_damage_ = display_frame_;
+    UpdateSurfaceDamage(layer, previous_layer);
+    if (gpu_rendered_) {
+      surface_damage_.left =
+          std::min(surface_damage_.left, display_frame_.left);
+      surface_damage_.right =
+          std::min(surface_damage_.right, display_frame_.right);
+      surface_damage_.top = std::min(surface_damage_.top, display_frame_.top);
+      surface_damage_.bottom =
+          std::min(surface_damage_.bottom, display_frame_.bottom);
+    }
   }
 
   float lconstraint = (float)layer->GetLeftSourceConstraint();

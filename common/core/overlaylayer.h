@@ -205,6 +205,8 @@ struct OverlayLayer {
 
   void ValidateTransform(uint32_t transform, uint32_t display_transform);
 
+  void UpdateSurfaceDamage(HwcLayer* layer, OverlayLayer* previous_layer);
+
   void InitializeState(HwcLayer* layer, NativeBufferHandler* buffer_handler,
                        OverlayLayer* previous_layer, uint32_t z_order,
                        uint32_t layer_index, uint32_t max_height,
@@ -222,6 +224,7 @@ struct OverlayLayer {
   HwcRect<float> source_crop_;
   HwcRect<int> display_frame_;
   HwcRect<int> surface_damage_;
+  HwcRect<int> last_surface_damage_;
   HWCBlending blending_ = HWCBlending::kBlendingNone;
   uint32_t state_ =
       kLayerAttributesChanged | kLayerContentChanged | kDimensionsChanged;
